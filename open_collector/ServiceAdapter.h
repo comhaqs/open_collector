@@ -7,14 +7,12 @@
 #include <mutex>
 #include <list>
 #include <boost/asio.hpp>
+#include "UtilityLibrary.h"
 
 
 class ServiceAdapter
 {
 public:
-    typedef std::shared_ptr<boost::asio::io_service> service_ptr;
-
-
     template<typename ...T>
     void add_listen(const std::string& tag, std::function<void (T...)> fun){
         add_listen(tag, fun, get_service());
@@ -41,13 +39,6 @@ public:
     }
 
 protected:
-    class ProxyBase{
-    public:
-        virtual ~ProxyBase(){}
-    };
-    typedef std::shared_ptr<ProxyBase> ProxyBasePtr;
-
-
     template<typename ...T>
     class InfoServiceAdapter : public ProxyBase{
     public:

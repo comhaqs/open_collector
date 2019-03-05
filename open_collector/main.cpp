@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <boost/thread.hpp>
 #include "ServiceAdapter.h"
-
+#include "ServiceNet.h"
 
 
 using namespace std;
@@ -11,6 +11,8 @@ using namespace std;
 
 int main()
 {
+    ServiceNet net;
+
     ServiceAdapter service;
 
     std::function<void ()> fun0 = [](){

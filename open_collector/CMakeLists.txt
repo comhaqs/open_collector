@@ -13,6 +13,8 @@ link_directories("D:/boost_1_67_0/lib/mingw-w64/x64")
 #第三方库头文件目录
 include_directories("D:/boost_1_67_0")
 
+ADD_DEFINITIONS(-DBOOST_COROUTINES_NO_DEPRECATION_WARNING)
+
 
 #输出项目名称
 project(open_collector)
@@ -22,4 +24,5 @@ set(src_app ${files_current})
 
 add_executable(${PROJECT_NAME} ${src_app})
 #链接第三方库
-target_link_libraries (${PROJECT_NAME} ws2_32 boost_system-mgw73-mt-s-x64-1_67 boost_thread-mgw73-mt-s-x64-1_67)
+target_link_libraries (${PROJECT_NAME} ws2_32 wsock32 boost_system-mgw73-mt-s-x64-1_67 boost_thread-mgw73-mt-s-x64-1_67
+    boost_coroutine-mgw73-mt-s-x64-1_67 boost_context-mgw73-mt-s-x64-1_67)
