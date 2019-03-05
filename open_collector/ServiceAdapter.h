@@ -73,6 +73,21 @@ public:
 
     template<typename ...T>
     void notify(const std::string& tag, T... args){
+        return notify_call(std::move(tag), translate_type(std::move(args))...);
+    }
+
+protected:
+    template<typename T>
+    T&& translate_type(T&& t){
+        return std::move(t);
+    }
+
+    std::string&& translate_type(const char*&& t){
+        return std::move(std::string(t));
+    }
+
+    template<typename ...T>
+    void notify_call(const std::string& tag, T... args){
         std::list<ProxyBasePtr> list;
         {
             std::lock_guard<std::mutex> lock(m_mutex);
@@ -88,9 +103,9 @@ public:
                 return;
             }
             if(p_info->p_service){
-                p_info->p_service->post(std::bind(ServiceAdapter::run<T...>, p_info->fun, args...));
+                p_info->p_service->post(std::bind(ServiceAdapter::run<T...>, p_info->fun, std::move(args)...));
             }else{
-                p_info->fun(args...);
+                p_info->fun(std::move(args)...);
             }
         }
     }

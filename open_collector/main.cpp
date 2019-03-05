@@ -55,12 +55,12 @@ int main()
     service.notify("0");
     service.notify("1", 10);
     service.notify("1", 11);
-    service.notify("2", 20, std::string("200"));
-    service.notify("2", std::string("abc"), std::string("210"));
+    service.notify("2", 20, "200");
+    service.notify("2", "abc", "210");
 
-    service.notify("31", 1, 2, std::string("210"));
-    service.notify("32", 1, std::string("32"), std::string("210"));
-    service.notify("33", std::string("33"), std::string("33"), std::string("210"));
+    service.notify("31", 1, 2,"210");
+    service.notify("32", 1, "32", "210");
+    service.notify("33", "33", std::string("33"), "210");
 
     boost::this_thread::sleep(boost::posix_time::seconds(2));
     p_service1->stop();
