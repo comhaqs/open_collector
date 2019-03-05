@@ -6,43 +6,7 @@
 #include <map>
 #include <mutex>
 #include <list>
-#include <iostream>
 #include <boost/asio.hpp>
-#include <boost/ref.hpp>
-
-class ProxyBase{
-public:
-    virtual ~ProxyBase(){}
-};
-typedef std::shared_ptr<ProxyBase> ProxyBasePtr;
-
-template <typename T1>
-class ProxyParam1 : public ProxyBase{
-public:
-    T1 param1;
-};
-
-template <typename T1, typename T2>
-class ProxyParam2 : public ProxyBase{
-public:
-    T1 param1;
-    T2 param2;
-};
-
-template <typename T1, typename T2, typename T3>
-class ProxyParam3 : public ProxyBase{
-public:
-    T1 param1;
-    T2 param2;
-    T3 param3;
-};
-
-template<typename ...T>
-class InfoServiceAdapter : public ProxyBase{
-public:
-    std::function<void (T...)> fun;
-    std::shared_ptr<boost::asio::io_service> p_service;
-};
 
 
 class ServiceAdapter
@@ -77,6 +41,20 @@ public:
     }
 
 protected:
+    class ProxyBase{
+    public:
+        virtual ~ProxyBase(){}
+    };
+    typedef std::shared_ptr<ProxyBase> ProxyBasePtr;
+
+
+    template<typename ...T>
+    class InfoServiceAdapter : public ProxyBase{
+    public:
+        std::function<void (T...)> fun;
+        std::shared_ptr<boost::asio::io_service> p_service;
+    };
+
     template<typename T>
     T&& translate_type(T&& t){
         return std::move(t);
