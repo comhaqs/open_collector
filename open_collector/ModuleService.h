@@ -8,6 +8,7 @@
 #include <mutex>
 #include <atomic>
 
+namespace open_collector{
 
 class ModuleService{
 public:
@@ -66,7 +67,9 @@ public:
     }
 
 protected:
-    static void log_error(const std::string&){}
+    static void log_error(const std::string& msg){
+        s_log_error(msg);
+    }
 
     static void handle_thread(service_ptr p_service){
         while (true) {
@@ -89,7 +92,7 @@ protected:
     std::atomic_bool m_bstart{true};
 };
 
-
+}
 
 
 #endif // MODULESERVICE_H

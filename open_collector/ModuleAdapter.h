@@ -7,8 +7,10 @@
 #include <mutex>
 #include <list>
 #include <boost/asio.hpp>
+#include <boost/format.hpp>
 #include "ModuleLibrary.h"
 
+namespace open_collector{
 
 class ModuleAdapter
 {
@@ -20,7 +22,7 @@ public:
 
     template<typename ...T>
     void add_listen(const std::string& tag, std::function<void (T...)> fun){
-        add_listen(tag, fun, get_service());
+        add_listen(tag, fun, service_ptr());
     }
 
     template<typename ...T>
@@ -67,6 +69,7 @@ protected:
             std::lock_guard<std::mutex> lock(m_mutex);
             auto iter = m_adapters.find(tag);
             if(m_adapters.end() == iter){
+                log_error((boost::format("can not find tag:%s") % tag).str());
                 return;
             }
             list = *(iter->second);
@@ -74,6 +77,7 @@ protected:
         for(auto& p : list){
             auto p_info = std::dynamic_pointer_cast<InfoModuleAdapter<T...>>(p);
             if(!p_info){
+                log_error((boost::format("dynamic_pointer_cast failed, type:%s") % typeid(InfoModuleAdapter<T...>)).str());
                 return;
             }
             if(p_info->p_service){
@@ -89,14 +93,14 @@ protected:
         fun(args...);
     }
 
-    static service_ptr get_service(){
-        return service_ptr();
+    virtual void log_error(const std::string& msg){
+        s_log_error(msg);
     }
 
     std::map<std::string, std::shared_ptr<std::list<ProxyBasePtr>>> m_adapters;
     std::mutex m_mutex;
 };
 
-
+}
 
 #endif // MODULEADAPTER_H

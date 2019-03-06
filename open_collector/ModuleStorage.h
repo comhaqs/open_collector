@@ -9,6 +9,10 @@
 #include <condition_variable>
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
+#include "ModuleLibrary.h"
+
+
+namespace open_collector{
 
 template<typename TData, typename TConnect>
 class ModuleStorage
@@ -24,8 +28,14 @@ public:
         }else if(30 < thread_count){
             m_thread_count = 30;
         }
+    }
 
-        start();
+    virtual bool start(){
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for(unsigned int i = 0; i < m_thread_count; ++i){
+            m_threads.emplace_back(boost::thread(std::bind(&ModuleStorage<TData,TConnect>::handle_thread, this->shared_from_this())));
+        }
+        return true;
     }
 
     virtual void stop(){
@@ -47,15 +57,9 @@ public:
         m_condition.notify_one();
     }
 protected:
-    virtual bool start(){
-        std::lock_guard<std::mutex> lock(m_mutex);
-        for(unsigned int i = 0; i < m_thread_count; ++i){
-            m_threads.emplace_back(boost::thread(std::bind(&ModuleStorage<TData,TConnect>::handle_thread, this->shared_from_this())));
-        }
-        return true;
+    virtual void log_error(const std::string& msg){
+        s_log_error(msg);
     }
-
-    virtual void log_error(const std::string& ){}
     virtual void get_connect(){return m_fun_get_connect();}
     virtual void handle_thread(){
         while(true){
@@ -94,5 +98,7 @@ protected:
     std::mutex m_mutex;
     std::function<cnt_ptr ()> m_fun_get_connect;
 };
+
+}
 
 #endif // MODULESTORAGE_H
