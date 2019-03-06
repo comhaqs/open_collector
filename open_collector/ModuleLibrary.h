@@ -1,5 +1,5 @@
-﻿#ifndef UTILITYLIBRARY_H
-#define UTILITYLIBRARY_H
+﻿#ifndef MODULELIBRARY_H
+#define MODULELIBRARY_H
 
 
 #include <boost/asio.hpp>
@@ -17,4 +17,4 @@ public:
 typedef std::shared_ptr<ProxyBase> ProxyBasePtr;
 
 
-#endif // UTILITYLIBRARY_H
+#endif // MODULELIBRARY_H

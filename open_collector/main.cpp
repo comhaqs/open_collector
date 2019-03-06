@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <boost/thread.hpp>
-#include "ServiceAdapter.h"
-#include "ServiceNet.h"
+#include "ModuleAdapter.h"
+#include "ModuleNet.h"
 
 
 using namespace std;
@@ -11,9 +11,7 @@ using namespace std;
 
 int main()
 {
-    ServiceNet net;
-
-    ServiceAdapter service;
+    ModuleAdapter service;
 
     std::function<void ()> fun0 = [](){
         std::cout<<boost::this_thread::get_id()<<" -> param null"<<std::endl;

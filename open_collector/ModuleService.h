@@ -1,19 +1,25 @@
-﻿#ifndef SERVICESERVICE_H
-#define SERVICESERVICE_H
+﻿#ifndef MODULESERVICE_H
+#define MODULESERVICE_H
 
-#include "UtilityLibrary.h"
+#include "ModuleLibrary.h"
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
 #include <vector>
 #include <mutex>
 #include <atomic>
 
-template <typename T>
-class ServiceService{
+
+class ModuleService{
 public:
-    virtual bool start(){
-        m_bstart = true;
-        return true;
+    static ModuleService& get_instance(){
+        static ModuleService s_instance;
+        return s_instance;
     }
+
+    virtual ~ModuleService(){
+        stop();
+    }
+
     virtual void stop(){
         m_bstart = false;
         std::vector<service_ptr> services;
@@ -28,6 +34,7 @@ public:
             p->stop();
         }
     }
+
     virtual service_ptr get_service(){
         if(!m_bstart){
             return service_ptr();
@@ -39,7 +46,7 @@ public:
                 for(unsigned int i = 0; i < count; ++i){
                     auto p_service = std::make_shared<service_ptr::element_type>();
                     m_services.emplace_back(p_service);
-                    m_threads.emplace_back(boost::thread(std::bind(ServiceService::handle_thread, p_service)));
+                    m_threads.emplace_back(boost::thread(std::bind(ModuleService::handle_thread, p_service)));
                 }
             }
             return m_services[static_cast<std::size_t>(rand()) % m_services.size()];
@@ -53,20 +60,25 @@ public:
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_services_singleton.emplace_back(p_service);
-            m_threads.push_back(boost::thread(std::bind(ServiceService::handle_thread, p_service)));
+            m_threads.push_back(boost::thread(std::bind(ModuleService::handle_thread, p_service)));
         }
         return p_service;
     }
 
 protected:
+    static void log_error(const std::string&){}
+
     static void handle_thread(service_ptr p_service){
-        try{
-            boost::asio::io_service::work work(*p_service);
-            p_service->run();
-        }catch(boost::thread_interrupted&){
-
-        }catch(std::exception&){
-
+        while (true) {
+            try{
+                boost::asio::io_service::work work(*p_service);
+                p_service->run();
+            }catch(boost::thread_interrupted&){
+                break;
+            }catch(std::exception& e){
+                log_error((boost::format("service error:%s") % e.what()).str());
+            }
+            boost::this_thread::sleep(boost::posix_time::seconds(60));
         }
     }
 
@@ -74,11 +86,10 @@ protected:
     std::vector<service_ptr> m_services;
     std::vector<service_ptr> m_services_singleton;
     std::mutex m_mutex;
-    std::atomic_bool m_bstart;
+    std::atomic_bool m_bstart{true};
 };
-typedef std::shared_ptr<ServiceService<void>> ServiceServicePtr;
 
 
 
 
-#endif // SERVICESERVICE_H
+#endif // MODULESERVICE_H

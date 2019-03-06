@@ -1,5 +1,5 @@
-﻿#ifndef SERVICEADAPTER_H
-#define SERVICEADAPTER_H
+﻿#ifndef MODULEADAPTER_H
+#define MODULEADAPTER_H
 
 #include <memory>
 #include <functional>
@@ -7,12 +7,17 @@
 #include <mutex>
 #include <list>
 #include <boost/asio.hpp>
-#include "UtilityLibrary.h"
+#include "ModuleLibrary.h"
 
 
-class ServiceAdapter
+class ModuleAdapter
 {
 public:
+    static ModuleAdapter& get_instance(){
+        static ModuleAdapter s_instance;
+        return s_instance;
+    }
+
     template<typename ...T>
     void add_listen(const std::string& tag, std::function<void (T...)> fun){
         add_listen(tag, fun, get_service());
@@ -20,14 +25,14 @@ public:
 
     template<typename ...T>
     void add_listen(const std::string& tag, std::function<void (T...)> fun, service_ptr p_service){
-        typedef std::shared_ptr<InfoServiceAdapter<T...>> info_ptr;
+        typedef std::shared_ptr<InfoModuleAdapter<T...>> info_ptr;
         std::lock_guard<std::mutex> lock(m_mutex);
 
         auto iter = m_adapters.find(tag);
         if(m_adapters.end() == iter){
             iter = m_adapters.insert(std::make_pair(tag, std::make_shared<std::list<ProxyBasePtr>>())).first;
         }
-        info_ptr p_info = std::make_shared<InfoServiceAdapter<T...>>();
+        info_ptr p_info = std::make_shared<InfoModuleAdapter<T...>>();
         p_info->p_service = p_service;
         p_info->fun = fun;
         iter->second->emplace_back(p_info);
@@ -40,7 +45,7 @@ public:
 
 protected:
     template<typename ...T>
-    class InfoServiceAdapter : public ProxyBase{
+    class InfoModuleAdapter : public ProxyBase{
     public:
         std::function<void (T...)> fun;
         std::shared_ptr<boost::asio::io_service> p_service;
@@ -67,12 +72,12 @@ protected:
             list = *(iter->second);
         }
         for(auto& p : list){
-            auto p_info = std::dynamic_pointer_cast<InfoServiceAdapter<T...>>(p);
+            auto p_info = std::dynamic_pointer_cast<InfoModuleAdapter<T...>>(p);
             if(!p_info){
                 return;
             }
             if(p_info->p_service){
-                p_info->p_service->post(std::bind(ServiceAdapter::run<T...>, p_info->fun, std::move(args)...));
+                p_info->p_service->post(std::bind(ModuleAdapter::run<T...>, p_info->fun, std::move(args)...));
             }else{
                 p_info->fun(std::move(args)...);
             }
@@ -93,4 +98,5 @@ protected:
 };
 
 
-#endif // SERVICEADAPTER_H
+
+#endif // MODULEADAPTER_H
