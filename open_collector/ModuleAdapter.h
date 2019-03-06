@@ -20,6 +20,8 @@ public:
         return s_instance;
     }
 
+    virtual ~ModuleAdapter(){}
+
     template<typename ...T>
     void add_listen(const std::string& tag, std::function<void (T...)> fun){
         add_listen(tag, fun, service_ptr());
@@ -77,7 +79,7 @@ protected:
         for(auto& p : list){
             auto p_info = std::dynamic_pointer_cast<InfoModuleAdapter<T...>>(p);
             if(!p_info){
-                log_error((boost::format("dynamic_pointer_cast failed, type:%s") % typeid(InfoModuleAdapter<T...>)).str());
+                log_error((boost::format("dynamic_pointer_cast failed, type:%s") % typeid(InfoModuleAdapter<T...>).name()).str());
                 return;
             }
             if(p_info->p_service){
