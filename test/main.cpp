@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <boost/thread.hpp>
-#include "ModuleAdapter.h"
-#include "ModuleNet.h"
+#include <open_collector/ModuleAdapter.h>
+#include <open_collector/ModuleNet.h>
 
 
 using namespace std;
