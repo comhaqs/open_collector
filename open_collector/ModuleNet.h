@@ -10,17 +10,18 @@
 
 namespace open_collector{
 
-class ModuleNet : public std::enable_shared_from_this<ModuleNet>
+template<typename Tinfo>
+class ModuleNet : public std::enable_shared_from_this<ModuleNet<Tinfo>>
 {
 public:
-    ModuleNet(unsigned int port, std::function<void (frame_ptr, socket_ptr)> fun): m_fun(fun), m_port(port){
+    ModuleNet(unsigned int port, std::function<void (frame_ptr, socket_ptr, std::shared_ptr<Tinfo>)> fun): m_fun(fun), m_port(port){
     }
 
     virtual ~ModuleNet(){}
 
     virtual bool start(){
         service_ptr p_service = ModuleService::get_instance().get_service_singleton();
-        boost::asio::spawn(*p_service, std::bind(&ModuleNet::handle_net, shared_from_this(), std::placeholders::_1, p_service, m_port));
+        boost::asio::spawn(*p_service, std::bind(&ModuleNet::handle_net, this->shared_from_this(), std::placeholders::_1, p_service, m_port));
         return true;
     }
 protected:
@@ -36,7 +37,7 @@ protected:
                 if(ec){
                    break;
                 }
-                boost::asio::spawn(*p_service, std::bind(&ModuleNet::handle_read, shared_from_this()
+                boost::asio::spawn(*p_service, std::bind(&ModuleNet::handle_read, this->shared_from_this()
                                                                , std::placeholders::_1, p_socket));
             }
         }catch(std::exception& e){
@@ -46,6 +47,7 @@ protected:
     virtual void handle_read(boost::asio::yield_context yield, socket_ptr p_socket){
         frame_ptr p_frame(new frame_ptr::element_type(m_buffer_max));
         frame_ptr p_frame_new;
+        std::shared_ptr<Tinfo> p_info = std::make_shared<Tinfo>();
         while(true){
             boost::system::error_code ec;
             std::size_t n = p_socket->async_read_some(boost::asio::buffer(p_frame->data(), m_buffer_max), yield[ec]);
@@ -57,7 +59,7 @@ protected:
                 break;
             }
             p_frame_new = std::make_shared<frame_ptr::element_type>(p_frame->begin(), p_frame->begin() + static_cast<long long>(n));
-            read_frame(p_frame_new, p_socket);
+            read_frame(p_frame_new, p_socket, p_info);
         }
     }
 
@@ -65,12 +67,12 @@ protected:
         s_log_error(msg);
     }
 
-    virtual void read_frame(frame_ptr p_frame, socket_ptr p_socket){
-        m_fun(p_frame, p_socket);
+    virtual void read_frame(frame_ptr p_frame, socket_ptr p_socket, std::shared_ptr<Tinfo> p_info){
+        m_fun(p_frame, p_socket, p_info);
     }
 
     unsigned int m_buffer_max = 256;
-    std::function<void (frame_ptr, socket_ptr)> m_fun;
+    std::function<void (frame_ptr, socket_ptr, std::shared_ptr<Tinfo>)> m_fun;
     unsigned int m_port = 0;
 };
 
